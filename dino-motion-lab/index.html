@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dino Motion Lab</title>
+<style>
+:root{--bg:#0d1117;--panel:#161d27;--line:#303b4a;--text:#eef4fa;--muted:#9ba8b8;--a:#6fd6ff;--g:#7ce3a1;--w:#ffd166}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}header{padding:14px 18px;border-bottom:1px solid var(--line)}h1{margin:0;font-size:20px}.sub{font-size:11px;color:var(--muted);margin-top:4px}.app{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.75fr);min-height:calc(100vh - 65px)}main,aside{padding:14px}aside{border-left:1px solid var(--line)}.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}svg{width:100%;height:520px;background:linear-gradient(#151d27,#10151c);border:1px solid var(--line);border-radius:12px}.row{display:grid;grid-template-columns:90px 1fr 54px;gap:8px;align-items:center;margin:7px 0;font-size:11px}.row label{color:var(--muted)}input[type=range]{width:100%}select,button{background:#1d2632;color:var(--text);border:1px solid #3a4758;border-radius:8px;padding:8px}button{cursor:pointer}.tools{display:flex;gap:7px;flex-wrap:wrap}.timeline{display:grid;grid-template-columns:auto 1fr 62px;gap:8px;align-items:center;margin-top:9px}.metric{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.m{padding:8px;background:#10151c;border:1px solid var(--line);border-radius:8px}.m b{display:block;font-size:16px}.m span{font-size:9px;color:var(--muted)}.note{font-size:10px;line-height:1.5;color:var(--muted)}.ok{color:var(--g)}.bad{color:#ff8f8f}@media(max-width:850px){.app{grid-template-columns:1fr}aside{border-left:0;border-top:1px solid var(--line)}svg{height:400px}}
+</style>
+</head>
+<body>
+<header><h1>Dino Motion Lab v2</h1><div class="sub">登録済みモーション → 骨格リンク → TSA必要ストロークの機構シミュレータ（現時点のモーション値は仮データ）</div></header>
+<div class="app">
+<main>
+<svg id="stage" viewBox="0 0 900 560" role="img" aria-label="恐竜骨格シミュレーション">
+<line x1="20" y1="490" x2="880" y2="490" stroke="#7ce3a1" stroke-width="3"/>
+<g id="skeleton" fill="none" stroke-linecap="round" stroke-linejoin="round">
+<path id="axial" stroke="#eef4fa" stroke-width="9"/>
+<path id="legL" stroke="#eef4fa" stroke-width="8"/>
+<path id="legR" stroke="#9ba8b8" stroke-width="7"/>
+<path id="tendon1" stroke="#6fd6ff" stroke-width="2"/>
+<path id="tendon2" stroke="#6fd6ff" stroke-width="2"/>
+<path id="tendon3" stroke="#6fd6ff" stroke-width="2"/>
+</g>
+<text x="20" y="28" fill="#eef4fa" font-size="16">Side-view simplified musculoskeletal model</text>
+<text x="20" y="50" fill="#9ba8b8" font-size="11">機構試験用リンクモデル。次段階で実骨格・現生動物実測モーションへ置換。</text>
+</svg>
+<div class="timeline"><button id="play">▶ 再生</button><input id="time" type="range" min="0" max="6" step="0.01" value="0"><output id="timeO">0.00 s</output></div>
+</main>
+<aside>
+<section class="card"><div class="tools"><select id="motion"></select><button id="load">読み込む</button></div><p class="note">4つのモーションを内蔵しています。選択→読み込む→再生で動作します。</p></section>
+<section class="card"><div class="row"><label>Hip</label><input id="hip" type="range" min="-20" max="90" value="15"><output id="hipO"></output></div><div class="row"><label>Knee</label><input id="knee" type="range" min="0" max="140" value="35"><output id="kneeO"></output></div><div class="row"><label>Ankle</label><input id="ankle" type="range" min="-10" max="120" value="30"><output id="ankleO"></output></div><div class="row"><label>Neck</label><input id="neck" type="range" min="-45" max="45" value="0"><output id="neckO"></output></div><div class="row"><label>Tail</label><input id="tail" type="range" min="-35" max="35" value="0"><output id="tailO"></output></div></section>
+<section class="card"><div class="row"><label>大腿骨</label><input id="femur" type="range" min="30" max="90" value="55"><output id="femurO"></output></div><div class="row"><label>脛骨</label><input id="shank" type="range" min="35" max="110" value="65"><output id="shankO"></output></div><div class="row"><label>中足部</label><input id="meta" type="range" min="25" max="80" value="48"><output id="metaO"></output></div></section>
+<section class="card"><div class="row"><label>moment arm</label><input id="arm" type="range" min="2" max="12" step="0.5" value="5"><output id="armO"></output></div><div class="row"><label>TSA自由長</label><input id="tsaLen" type="range" min="15" max="80" value="35"><output id="tsaLenO"></output></div><div class="row"><label>収縮率</label><input id="tsaPct" type="range" min="5" max="35" value="20"><output id="tsaPctO"></output></div><div class="metric"><div class="m"><b id="hDL">0</b><span>Hip ΔL mm</span></div><div class="m"><b id="kDL">0</b><span>Knee ΔL mm</span></div><div class="m"><b id="aDL">0</b><span>Ankle ΔL mm</span></div></div><p id="status" class="note"></p></section>
+<section class="card"><p class="note"><b>注意:</b> このv2は「サイトが動くこと」と機構計算の確認用です。内蔵モーションは現生動物の実測値ではありません。次版で複数現生種のデータを取り込みます。</p></section>
+</aside></div>
+<script>
+const $=id=>document.getElementById(id);
+const motions={
+ rest:{name:'STAND → CROUCH → REST → RISE',f:[{t:0,h:15,k:35,a:30,n:0,ta:0},{t:1,h:25,k:55,a:40,n:0,ta:0},{t:2,h:35,k:75,a:55,n:3,ta:-3},{t:3,h:55,k:110,a:85,n:12,ta:-8},{t:4.5,h:30,k:65,a:45,n:3,ta:-2},{t:6,h:15,k:35,a:30,n:0,ta:0}]},
+ walk:{name:'SLOW WALK CYCLE（仮）',f:[{t:0,h:10,k:35,a:25,n:0,ta:-5},{t:.5,h:28,k:58,a:38,n:2,ta:-10},{t:1,h:5,k:28,a:18,n:0,ta:0},{t:1.5,h:-5,k:25,a:15,n:-2,ta:10},{t:2,h:10,k:35,a:25,n:0,ta:-5}]},
+ look:{name:'LOOK AROUND（仮）',f:[{t:0,h:15,k:35,a:30,n:0,ta:0},{t:1,h:15,k:35,a:30,n:35,ta:-8},{t:2,h:15,k:35,a:30,n:-35,ta:8},{t:3,h:15,k:35,a:30,n:0,ta:0}]},
+ sleep:{name:'REST → SLEEP-LIKE（仮）',f:[{t:0,h:40,k:85,a:65,n:0,ta:0},{t:1.5,h:55,k:110,a:85,n:15,ta:-8},{t:3,h:65,k:125,a:95,n:32,ta:-14},{t:4.5,h:67,k:130,a:100,n:42,ta:-18}]}
+};
+let cur=motions.rest,playing=false,last=0;
+Object.entries(motions).forEach(([key,m])=>{let o=document.createElement('option');o.value=key;o.textContent=m.name;$('motion').appendChild(o)});
+function smooth(u){return u*u*(3-2*u)}
+function sample(t){let F=cur.f;if(t<=F[0].t)return F[0];if(t>=F[F.length-1].t)return F[F.length-1];for(let i=0;i<F.length-1;i++){if(t>=F[i].t&&t<=F[i+1].t){let u=smooth((t-F[i].t)/(F[i+1].t-F[i].t)),z={t};['h','k','a','n','ta'].forEach(q=>z[q]=F[i][q]+(F[i+1][q]-F[i][q])*u);return z}}}
+function setPose(p){$('hip').value=p.h;$('knee').value=p.k;$('ankle').value=p.a;$('neck').value=p.n;$('tail').value=p.ta;draw()}
+function load(){cur=motions[$('motion').value];$('time').max=cur.f[cur.f.length-1].t;$('time').value=0;setPose(cur.f[0]);$('timeO').textContent='0.00 s'}
+$('load').onclick=load;
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'⏸ 停止':'▶ 再生';if(playing){last=performance.now();requestAnimationFrame(tick)}};
+function tick(ts){if(!playing)return;let t=+$('time').value+(ts-last)/1000;last=ts;if(t>+$('time').max)t=0;$('time').value=t;let p=sample(t);setPose(p);$('timeO').textContent=t.toFixed(2)+' s';requestAnimationFrame(tick)}
+$('time').oninput=()=>{let t=+$('time').value;setPose(sample(t));$('timeO').textContent=t.toFixed(2)+' s'};
+['hip','knee','ankle','neck','tail','femur','shank','meta','arm','tsaLen','tsaPct'].forEach(id=>$(id).oninput=()=>{playing=false;$('play').textContent='▶ 再生';draw()});
+function xy(x,y){return[340+x*2.2,490-y*2.2]}
+function pts(){let h=+$('hip').value,k=+$('knee').value,a=+$('ankle').value,Lf=+$('femur').value,Ls=+$('shank').value,Lm=+$('meta').value;let ha=(-105+.45*(h-15))*Math.PI/180,ka=ha+(55+.55*k)*Math.PI/180,aa=ka+(-95+.35*a)*Math.PI/180;let H=[0,0],K=[Lf*Math.cos(ha),Lf*Math.sin(ha)],A=[K[0]+Ls*Math.cos(ka),K[1]+Ls*Math.sin(ka)],T=[A[0]+Lm*Math.cos(aa),A[1]+Lm*Math.sin(aa)],dy=-T[1];[H,K,A,T].forEach(p=>p[1]+=dy);return{H,K,A,T}}
+function path(arr){return arr.map((p,i)=>{let q=xy(p[0],p[1]);return(i?'L':'M')+q[0].toFixed(1)+' '+q[1].toFixed(1)}).join(' ')}
+function draw(){let P=pts(),n=+$('neck').value,ta=+$('tail').value;let shoulder=[110,P.H[1]+8],neck=[165,P.H[1]+26+n*.4],head=[195,P.H[1]+22+n*.5],tail=[-150,P.H[1]+18+ta*.25];$('legL').setAttribute('d',path([P.H,P.K,P.A,P.T]));$('legR').setAttribute('d',path([[P.H[0]+5,P.H[1]],[P.K[0]+5,P.K[1]],[P.A[0]+5,P.A[1]],[P.T[0]+5,P.T[1]]]));$('axial').setAttribute('d',path([tail,P.H,shoulder,neck,head]));$('tendon1').setAttribute('d',path([[P.H[0]-8,P.H[1]+32],P.K]));$('tendon2').setAttribute('d',path([[P.K[0]+15,P.K[1]+18],P.A]));$('tendon3').setAttribute('d',path([[P.A[0]+13,P.A[1]+13],P.T]));let r=+$('arm').value,hd=Math.max(0,(+$('hip').value-15)*Math.PI/180*r),kd=Math.max(0,(+$('knee').value-35)*Math.PI/180*r),ad=Math.max(0,(+$('ankle').value-30)*Math.PI/180*r),cap=+$('tsaLen').value*+$('tsaPct').value/100,req=Math.max(hd,kd,ad);$('hDL').textContent=hd.toFixed(2);$('kDL').textContent=kd.toFixed(2);$('aDL').textContent=ad.toFixed(2);$('status').innerHTML='TSA最大 '+cap.toFixed(2)+' mm / 現姿勢要求 '+req.toFixed(2)+' mm → <span class="'+(req<=cap?'ok':'bad')+'">'+(req<=cap?'範囲内':'不足')+'</span>';let s={hip:'°',knee:'°',ankle:'°',neck:'°',tail:'°',femur:' mm',shank:' mm',meta:' mm',arm:' mm',tsaLen:' mm',tsaPct:'%'};Object.entries(s).forEach(([id,u])=>$(id+'O').textContent=(id==='arm'?(+$('arm').value).toFixed(1):$(id).value)+u)}
+load();
+</script>
+</body></html>
